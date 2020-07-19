@@ -1,0 +1,665 @@
+{
+ "cells": [
+  {
+   "cell_type": "code",
+   "execution_count": 1,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "import pandas as pd\n",
+    "from scipy.sparse import csr_matrix\n",
+    "from sklearn.neighbors import NearestNeighbors\n"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 2,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Collecting package metadata (current_repodata.json): done\n",
+      "Solving environment: done\n",
+      "\n",
+      "# All requested packages already installed.\n",
+      "\n",
+      "\n",
+      "Note: you may need to restart the kernel to use updated packages.\n"
+     ]
+    }
+   ],
+   "source": [
+    "conda install -c conda-forge fuzzywuzzy"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 3,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "from fuzzywuzzy import process, fuzz"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 4,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "#Import ecommerce datasets\n",
+    "\n",
+    "import pandas as pd\n",
+    "df1 = pd.read_csv(\"/Users/tomilayoibrahim/Desktop/ecommerce_shop/2019_Dec.csv\")\n",
+    "df2 = pd.read_csv(\"/Users/tomilayoibrahim/Desktop/ecommerce_shop/2019_Nov.csv\")\n",
+    "df3 = pd.read_csv(\"/Users/tomilayoibrahim/Desktop/ecommerce_shop/2019_Oct.csv\")\n",
+    "df4 = pd.read_csv(\"/Users/tomilayoibrahim/Desktop/ecommerce_shop/2020_Feb.csv\")\n",
+    "df5 = pd.read_csv(\"/Users/tomilayoibrahim/Desktop/ecommerce_shop/2020_Jan.csv\")"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 5,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "#Merge ecommerce store 5-mnth period data\n",
+    "ecommdf_KNN = pd.concat([df1,df2,df3,df4,df5])"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": []
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 6,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/html": [
+       "<div>\n",
+       "<style scoped>\n",
+       "    .dataframe tbody tr th:only-of-type {\n",
+       "        vertical-align: middle;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe tbody tr th {\n",
+       "        vertical-align: top;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe thead th {\n",
+       "        text-align: right;\n",
+       "    }\n",
+       "</style>\n",
+       "<table border=\"1\" class=\"dataframe\">\n",
+       "  <thead>\n",
+       "    <tr style=\"text-align: right;\">\n",
+       "      <th></th>\n",
+       "      <th>event_time</th>\n",
+       "      <th>event_type</th>\n",
+       "      <th>product_id</th>\n",
+       "      <th>category_id</th>\n",
+       "      <th>category_code</th>\n",
+       "      <th>brand</th>\n",
+       "      <th>price</th>\n",
+       "      <th>user_id</th>\n",
+       "      <th>user_session</th>\n",
+       "    </tr>\n",
+       "  </thead>\n",
+       "  <tbody>\n",
+       "    <tr>\n",
+       "      <th>0</th>\n",
+       "      <td>2019-12-01 00:00:00 UTC</td>\n",
+       "      <td>remove_from_cart</td>\n",
+       "      <td>5712790</td>\n",
+       "      <td>1487580005268456287</td>\n",
+       "      <td>NaN</td>\n",
+       "      <td>f.o.x</td>\n",
+       "      <td>6.27</td>\n",
+       "      <td>576802932</td>\n",
+       "      <td>51d85cb0-897f-48d2-918b-ad63965c12dc</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>1</th>\n",
+       "      <td>2019-12-01 00:00:00 UTC</td>\n",
+       "      <td>view</td>\n",
+       "      <td>5764655</td>\n",
+       "      <td>1487580005411062629</td>\n",
+       "      <td>NaN</td>\n",
+       "      <td>cnd</td>\n",
+       "      <td>29.05</td>\n",
+       "      <td>412120092</td>\n",
+       "      <td>8adff31e-2051-4894-9758-224bfa8aec18</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>2</th>\n",
+       "      <td>2019-12-01 00:00:02 UTC</td>\n",
+       "      <td>cart</td>\n",
+       "      <td>4958</td>\n",
+       "      <td>1487580009471148064</td>\n",
+       "      <td>NaN</td>\n",
+       "      <td>runail</td>\n",
+       "      <td>1.19</td>\n",
+       "      <td>494077766</td>\n",
+       "      <td>c99a50e8-2fac-4c4d-89ec-41c05f114554</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>3</th>\n",
+       "      <td>2019-12-01 00:00:05 UTC</td>\n",
+       "      <td>view</td>\n",
+       "      <td>5848413</td>\n",
+       "      <td>1487580007675986893</td>\n",
+       "      <td>NaN</td>\n",
+       "      <td>freedecor</td>\n",
+       "      <td>0.79</td>\n",
+       "      <td>348405118</td>\n",
+       "      <td>722ffea5-73c0-4924-8e8f-371ff8031af4</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>4</th>\n",
+       "      <td>2019-12-01 00:00:07 UTC</td>\n",
+       "      <td>view</td>\n",
+       "      <td>5824148</td>\n",
+       "      <td>1487580005511725929</td>\n",
+       "      <td>NaN</td>\n",
+       "      <td>NaN</td>\n",
+       "      <td>5.56</td>\n",
+       "      <td>576005683</td>\n",
+       "      <td>28172809-7e4a-45ce-bab0-5efa90117cd5</td>\n",
+       "    </tr>\n",
+       "  </tbody>\n",
+       "</table>\n",
+       "</div>"
+      ],
+      "text/plain": [
+       "                event_time        event_type  product_id          category_id  \\\n",
+       "0  2019-12-01 00:00:00 UTC  remove_from_cart     5712790  1487580005268456287   \n",
+       "1  2019-12-01 00:00:00 UTC              view     5764655  1487580005411062629   \n",
+       "2  2019-12-01 00:00:02 UTC              cart        4958  1487580009471148064   \n",
+       "3  2019-12-01 00:00:05 UTC              view     5848413  1487580007675986893   \n",
+       "4  2019-12-01 00:00:07 UTC              view     5824148  1487580005511725929   \n",
+       "\n",
+       "  category_code      brand  price    user_id  \\\n",
+       "0           NaN      f.o.x   6.27  576802932   \n",
+       "1           NaN        cnd  29.05  412120092   \n",
+       "2           NaN     runail   1.19  494077766   \n",
+       "3           NaN  freedecor   0.79  348405118   \n",
+       "4           NaN        NaN   5.56  576005683   \n",
+       "\n",
+       "                           user_session  \n",
+       "0  51d85cb0-897f-48d2-918b-ad63965c12dc  \n",
+       "1  8adff31e-2051-4894-9758-224bfa8aec18  \n",
+       "2  c99a50e8-2fac-4c4d-89ec-41c05f114554  \n",
+       "3  722ffea5-73c0-4924-8e8f-371ff8031af4  \n",
+       "4  28172809-7e4a-45ce-bab0-5efa90117cd5  "
+      ]
+     },
+     "execution_count": 6,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "ecommdf_KNN.head()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 7,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "#In order to build the recommendation model, even_type will be ranked in order of interest as ratings and stored in a new column. 'remove_from_cart':1, 'view':2, 'cart': 3, 'purchase': 3})\n",
+    "\n",
+    "ecommdf_KNN['rating']= ecommdf_KNN['event_type'].map({'remove_from_cart':1, 'view':2, 'cart': 3, 'purchase': 3})\n"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 8,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "ecommdf_KNN1  = ecommdf_KNN.drop([ 'price', 'event_time','event_type','category_code', 'user_session'], axis=1)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 9,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "#To drop duplicated records\n",
+    "ecommdf_KNN2 = ecommdf_KNN1.drop_duplicates()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 10,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/html": [
+       "<div>\n",
+       "<style scoped>\n",
+       "    .dataframe tbody tr th:only-of-type {\n",
+       "        vertical-align: middle;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe tbody tr th {\n",
+       "        vertical-align: top;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe thead th {\n",
+       "        text-align: right;\n",
+       "    }\n",
+       "</style>\n",
+       "<table border=\"1\" class=\"dataframe\">\n",
+       "  <thead>\n",
+       "    <tr style=\"text-align: right;\">\n",
+       "      <th></th>\n",
+       "      <th>product_id</th>\n",
+       "      <th>category_id</th>\n",
+       "      <th>brand</th>\n",
+       "      <th>user_id</th>\n",
+       "      <th>rating</th>\n",
+       "    </tr>\n",
+       "  </thead>\n",
+       "  <tbody>\n",
+       "    <tr>\n",
+       "      <th>0</th>\n",
+       "      <td>5712790</td>\n",
+       "      <td>1487580005268456287</td>\n",
+       "      <td>f.o.x</td>\n",
+       "      <td>576802932</td>\n",
+       "      <td>1</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>1</th>\n",
+       "      <td>5764655</td>\n",
+       "      <td>1487580005411062629</td>\n",
+       "      <td>cnd</td>\n",
+       "      <td>412120092</td>\n",
+       "      <td>2</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>2</th>\n",
+       "      <td>4958</td>\n",
+       "      <td>1487580009471148064</td>\n",
+       "      <td>runail</td>\n",
+       "      <td>494077766</td>\n",
+       "      <td>3</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>3</th>\n",
+       "      <td>5848413</td>\n",
+       "      <td>1487580007675986893</td>\n",
+       "      <td>freedecor</td>\n",
+       "      <td>348405118</td>\n",
+       "      <td>2</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>4</th>\n",
+       "      <td>5824148</td>\n",
+       "      <td>1487580005511725929</td>\n",
+       "      <td>NaN</td>\n",
+       "      <td>576005683</td>\n",
+       "      <td>2</td>\n",
+       "    </tr>\n",
+       "  </tbody>\n",
+       "</table>\n",
+       "</div>"
+      ],
+      "text/plain": [
+       "   product_id          category_id      brand    user_id  rating\n",
+       "0     5712790  1487580005268456287      f.o.x  576802932       1\n",
+       "1     5764655  1487580005411062629        cnd  412120092       2\n",
+       "2        4958  1487580009471148064     runail  494077766       3\n",
+       "3     5848413  1487580007675986893  freedecor  348405118       2\n",
+       "4     5824148  1487580005511725929        NaN  576005683       2"
+      ]
+     },
+     "execution_count": 10,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "ecommdf_KNN2.head()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 11,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "#Spare Matrix\n",
+    "\n",
+    "#df too large when index= product_id, therefore we use brand instead\n",
+    "\n",
+    "ecommdf_KNN3 = ecommdf_KNN2.pivot_table(index = 'brand', columns = 'user_id', values = 'rating').fillna(0)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 12,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "mat_ecommdf_KNN3 = csr_matrix(ecommdf_KNN3.values)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": []
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 13,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "#Euclidean Distance\n",
+    "#Manhattan Distance\n",
+    "#Minkowski Distance\n",
+    "#Cosine Similarity. Calculates similariries btw ... e.g.(Cos)\n",
+    "model_knn = NearestNeighbors(metric = 'cosine', algorithm = 'brute', n_neighbors = 30)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 14,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "NearestNeighbors(algorithm='brute', leaf_size=30, metric='cosine',\n",
+       "                 metric_params=None, n_jobs=None, n_neighbors=30, p=2,\n",
+       "                 radius=1.0)"
+      ]
+     },
+     "execution_count": 14,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "model_knn.fit(mat_ecommdf_KNN3)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 15,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "brands Selected:  2    runail\n",
+      "2       pnb\n",
+      "2    lovely\n",
+      "2    zeitun\n",
+      "Name: brand, dtype: object Index:  2\n",
+      "Searching for recommendations...\n",
+      "[[0.         0.93755646 0.94335112 0.97511109 0.9771151  0.97876491\n",
+      "  0.98157912 0.982136   0.9827362  0.9830166  0.98303161 0.983054\n",
+      "  0.98380682 0.98381563 0.98449388 0.98456424 0.98486424 0.98490448\n",
+      "  0.98509539 0.98525092]] [[  2   3 142 241  83 188 165 124 214  34 171  87   5  98 226 216 202 235\n",
+      "   86 236]]\n"
+     ]
+    }
+   ],
+   "source": [
+    "#Recommender (brand_name) => List of brands recommended\n",
+    "\n",
+    "def recommender (brand_name, data,model, n_recommendations):\n",
+    "    model.fit(data)\n",
+    "    idx = process.extractOne(brand_name ,ecommdf_KNN2['brand'])[2]\n",
+    "    print('brands Selected: ', ecommdf_KNN2['brand'][idx], 'Index: ',idx)\n",
+    "    print('Searching for recommendations...')\n",
+    "    distances, indices = model.kneighbors(data[idx], n_neighbors = n_recommendations)\n",
+    "    print(distances, indices)\n",
+    "    \n",
+    "recommender('runail', mat_ecommdf_KNN3, model_knn, 20)   "
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 16,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/html": [
+       "<div>\n",
+       "<style scoped>\n",
+       "    .dataframe tbody tr th:only-of-type {\n",
+       "        vertical-align: middle;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe tbody tr th {\n",
+       "        vertical-align: top;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe thead th {\n",
+       "        text-align: right;\n",
+       "    }\n",
+       "</style>\n",
+       "<table border=\"1\" class=\"dataframe\">\n",
+       "  <thead>\n",
+       "    <tr style=\"text-align: right;\">\n",
+       "      <th></th>\n",
+       "      <th>product_id</th>\n",
+       "      <th>category_id</th>\n",
+       "      <th>brand</th>\n",
+       "      <th>user_id</th>\n",
+       "      <th>rating</th>\n",
+       "    </tr>\n",
+       "  </thead>\n",
+       "  <tbody>\n",
+       "    <tr>\n",
+       "      <th>0</th>\n",
+       "      <td>5712790</td>\n",
+       "      <td>1487580005268456287</td>\n",
+       "      <td>f.o.x</td>\n",
+       "      <td>576802932</td>\n",
+       "      <td>1</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>1</th>\n",
+       "      <td>5764655</td>\n",
+       "      <td>1487580005411062629</td>\n",
+       "      <td>cnd</td>\n",
+       "      <td>412120092</td>\n",
+       "      <td>2</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>2</th>\n",
+       "      <td>4958</td>\n",
+       "      <td>1487580009471148064</td>\n",
+       "      <td>runail</td>\n",
+       "      <td>494077766</td>\n",
+       "      <td>3</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>3</th>\n",
+       "      <td>5848413</td>\n",
+       "      <td>1487580007675986893</td>\n",
+       "      <td>freedecor</td>\n",
+       "      <td>348405118</td>\n",
+       "      <td>2</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>4</th>\n",
+       "      <td>5824148</td>\n",
+       "      <td>1487580005511725929</td>\n",
+       "      <td>NaN</td>\n",
+       "      <td>576005683</td>\n",
+       "      <td>2</td>\n",
+       "    </tr>\n",
+       "  </tbody>\n",
+       "</table>\n",
+       "</div>"
+      ],
+      "text/plain": [
+       "   product_id          category_id      brand    user_id  rating\n",
+       "0     5712790  1487580005268456287      f.o.x  576802932       1\n",
+       "1     5764655  1487580005411062629        cnd  412120092       2\n",
+       "2        4958  1487580009471148064     runail  494077766       3\n",
+       "3     5848413  1487580007675986893  freedecor  348405118       2\n",
+       "4     5824148  1487580005511725929        NaN  576005683       2"
+      ]
+     },
+     "execution_count": 16,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "ecommdf_KNN2.head()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 17,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/html": [
+       "<div>\n",
+       "<style scoped>\n",
+       "    .dataframe tbody tr th:only-of-type {\n",
+       "        vertical-align: middle;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe tbody tr th {\n",
+       "        vertical-align: top;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe thead th {\n",
+       "        text-align: right;\n",
+       "    }\n",
+       "</style>\n",
+       "<table border=\"1\" class=\"dataframe\">\n",
+       "  <thead>\n",
+       "    <tr style=\"text-align: right;\">\n",
+       "      <th></th>\n",
+       "      <th>product_id</th>\n",
+       "      <th>brand</th>\n",
+       "      <th>user_id</th>\n",
+       "      <th>rating</th>\n",
+       "    </tr>\n",
+       "  </thead>\n",
+       "  <tbody>\n",
+       "    <tr>\n",
+       "      <th>0</th>\n",
+       "      <td>5712790</td>\n",
+       "      <td>f.o.x</td>\n",
+       "      <td>576802932</td>\n",
+       "      <td>1</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>1</th>\n",
+       "      <td>5764655</td>\n",
+       "      <td>cnd</td>\n",
+       "      <td>412120092</td>\n",
+       "      <td>2</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>2</th>\n",
+       "      <td>4958</td>\n",
+       "      <td>runail</td>\n",
+       "      <td>494077766</td>\n",
+       "      <td>3</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>3</th>\n",
+       "      <td>5848413</td>\n",
+       "      <td>freedecor</td>\n",
+       "      <td>348405118</td>\n",
+       "      <td>2</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>4</th>\n",
+       "      <td>5824148</td>\n",
+       "      <td>NaN</td>\n",
+       "      <td>576005683</td>\n",
+       "      <td>2</td>\n",
+       "    </tr>\n",
+       "  </tbody>\n",
+       "</table>\n",
+       "</div>"
+      ],
+      "text/plain": [
+       "   product_id      brand    user_id  rating\n",
+       "0     5712790      f.o.x  576802932       1\n",
+       "1     5764655        cnd  412120092       2\n",
+       "2        4958     runail  494077766       3\n",
+       "3     5848413  freedecor  348405118       2\n",
+       "4     5824148        NaN  576005683       2"
+      ]
+     },
+     "execution_count": 17,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "ecommdf_weka = ecommdf_KNN2.drop (['category_id'], axis= 1)\n",
+    "ecommdf_weka.head()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 18,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "ecommdf_weka.to_csv('ecommdf_weka.csv', index =False)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": []
+  }
+ ],
+ "metadata": {
+  "kernelspec": {
+   "display_name": "Python 3",
+   "language": "python",
+   "name": "python3"
+  },
+  "language_info": {
+   "codemirror_mode": {
+    "name": "ipython",
+    "version": 3
+   },
+   "file_extension": ".py",
+   "mimetype": "text/x-python",
+   "name": "python",
+   "nbconvert_exporter": "python",
+   "pygments_lexer": "ipython3",
+   "version": "3.7.7"
+  }
+ },
+ "nbformat": 4,
+ "nbformat_minor": 4
+}
